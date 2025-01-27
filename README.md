@@ -4,6 +4,8 @@
 
 **PictuRAS** is a web app developed as part of the "Requisitos e Arquiteturas de Software" course for the academic year 2024/2025, as a part of the **Software Engineering Master's Degree**. Its main goal is to provide a powerful and easy to use image editing platform, with support for bulk editing, advanced AI-powered features and user accounts with different subscription levels.
 
+The project used a microservices architecture, with services dedicated to project management, user/session management, tools and a gateway, with whom the frontend communicates.
+
 ## 🏆 Results
 > 🏅 **19/20**
 
