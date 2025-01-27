@@ -1,0 +1,27 @@
+{
+  "name": "projects",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www"
+  },
+  "dependencies": {
+    "amqplib": "^0.10.5",
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "express": "~4.16.1",
+    "http-errors": "~1.6.3",
+    "jade": "~1.11.0",
+    "mongoose": "^8.9.3",
+    "morgan": "^1.10.0",
+    "fs": "^0.0.1-security",
+    "https": "^1.0.0",
+    "axios": "^1.7.9",
+    "multer": "^1.4.5-lts.1",
+    "jszip": "^3.10.1",
+    "fs-extra": "^11.2.0",
+    "form-data": "^4.0.1",
+    "mime-types": "^2.1.35",
+    "uuid": "^11.0.5"
+  }
+}

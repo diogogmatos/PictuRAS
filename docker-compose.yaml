@@ -1,0 +1,449 @@
+services:
+  # elasticsearch:
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:7.6.2
+  #   environment:
+  #     - discovery.type=single-node
+  #   ports:
+  #     - 9200:9200
+  #   networks:
+  #     - elk
+
+  # logstash:
+  #   image: docker.elastic.co/logstash/logstash:7.6.2
+  #   ports:
+  #     - "12201:12201/udp"
+  #   volumes:
+  #     - ./backend/logstash.conf:/etc/logstash/logstash.conf
+  #   command: logstash -f /etc/logstash/logstash.conf
+  #   networks:
+  #     - elk
+  #   depends_on:
+  #     - elasticsearch
+
+  # kibana:
+  #   image: docker.elastic.co/kibana/kibana:7.6.2
+  #   ports:
+  #     - 5601:5601
+  #   # volumes:
+  #   #   - ./backend/kibana_data:/usr/share/kibana/data
+  #   networks:
+  #     - elk
+  #   depends_on:
+  #     - elasticsearch
+  #     - logstash
+
+  minio:
+    image: quay.io/minio/minio:RELEASE.2024-05-28T17-19-04Z
+    container_name: minio
+    restart: on-failure
+    command: server --console-address ":9090" /data
+    ports:
+      - "9000:9000"
+      - "9090:9090"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin123
+      # Update MINIO_DOMAIN to a.primecog.com/s3
+      MINIO_DOMAIN: "localhost:9000"
+    volumes:
+      - minio_data:/data
+    networks:
+      - elk
+
+  img_storage:
+    build: ./backend/minio
+    container_name: picturas-image-storage-ms
+    restart: on-failure
+    depends_on:
+      - minio
+    ports:
+      - "11000:11000"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin123
+      # Update MINIO_DOMAIN to a.primecog.com/s3
+      MINIO_DOMAIN: "localhost:9000"
+    networks:
+      - elk
+
+  rabbitmq:
+    build:
+      context: ./backend/rabbitMQ
+    container_name: rabbitmq
+    restart: on-failure
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: "user"
+      RABBITMQ_DEFAULT_PASS: "password"
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmqctl status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - elk
+
+  projects_mongoDB:
+    image: mongo:latest
+    container_name: projects_mongoDB
+    restart: on-failure
+    networks:
+      - elk
+    volumes:
+      - project_data:/data/db
+
+  projects:
+    build: ./backend/projects
+    container_name: picturas-projects-ms
+    depends_on:
+      - projects_mongoDB
+      - rabbitmq
+    ports:
+      - "9002:9001"
+    restart: on-failure
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=user
+      - RABBITMQ_PASS=password
+      - MINIO_DOMAIN=localhost:9000
+    networks:
+      - elk
+    volumes:
+      - image_data:/app/images
+
+  users_mongoDB:
+    image: mongo:latest
+    container_name: users_mongoDB
+    restart: on-failure
+    networks:
+      - elk
+    volumes:
+      - user_data:/data/db
+
+  users:
+    build: ./backend/users
+    container_name: picturas-users-ms
+    depends_on:
+      - users_mongoDB
+    ports:
+      - "10001:10001"
+    restart: on-failure
+    environment:
+      - FREE_DAILY_OP=5
+      - JWT_SECRET_KEY=lisan_al_gaib
+    networks:
+      - elk
+    volumes:
+      - ./backend/users:/app
+      - /app/node_modules
+
+  subscriptions_mongoDB:
+    image: mongo:latest
+    container_name: subscriptions_mongoDB
+    restart: on-failure
+    networks:
+      - elk
+    volumes:
+      - subscription_data:/data/db
+
+  subscriptions:
+    build: ./backend/subscriptions
+    container_name: picturas-subscriptions-ms
+    depends_on:
+      - subscriptions_mongoDB
+      - users
+    ports:
+      - "11001:11001"
+    restart: on-failure
+    environment:
+      - SECRET_KEY=card_secret_key
+    networks:
+      - elk
+    volumes:
+      - ./backend/subscriptions:/app
+      - /app/node_modules
+
+  api_gateway:
+    build: ./backend/apiGateway
+    container_name: picturas-api-gateway-ms
+    depends_on:
+      - projects
+      - users
+    ports:
+      - "8000:8000"
+    restart: on-failure
+    environment:
+      - JWT_SECRET_KEY=lisan_al_gaib
+    networks:
+      - elk
+    volumes:
+      - ./backend/apiGateway:/app
+      - /app/node_modules
+
+  # image-storage-service:
+  #   build: ./backend/imageStorageService
+  #   container_name: picturas-image-storage-ms
+  #   ports:
+  #     - 3001:3000
+  #   networks:
+  #     - elk
+  #   volumes:
+  #     - ./backend/imageStorageService/images:/usr/src/app/images
+
+  bg_remove_ai_tool:
+    build:
+      context: ./backend/Tools
+      dockerfile: bg_remove_ai/Dockerfile
+    container_name: picturas-bg-remove-ai-tool-ms
+    restart: on-failure
+    networks:
+      - elk
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - image_data:/app/images
+
+  binarization_tool:
+    build:
+      context: ./backend/Tools
+      dockerfile: binarization/Dockerfile
+    container_name: picturas-binarization-tool-ms
+    restart: on-failure
+    networks:
+      - elk
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - image_data:/app/images
+
+  border_tool:
+    build:
+      context: ./backend/Tools
+      dockerfile: border/Dockerfile
+    container_name: picturas-border-tool-ms
+    restart: on-failure
+    networks:
+      - elk
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - image_data:/app/images
+
+  brightness_tool:
+    build:
+      context: ./backend/Tools
+      dockerfile: brightness/Dockerfile
+    container_name: picturas-brightness-tool-ms
+    restart: on-failure
+    networks:
+      - elk
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - image_data:/app/images
+
+  contrast_tool:
+    build:
+      context: ./backend/Tools
+      dockerfile: contrast/Dockerfile
+    container_name: picturas-contrast-tool-ms
+    restart: on-failure
+    networks:
+      - elk
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - image_data:/app/images
+
+  cut_tool:
+    build:
+      context: ./backend/Tools
+      dockerfile: cut/Dockerfile
+    container_name: picturas-cut-tool-ms
+    restart: on-failure
+    networks:
+      - elk
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - image_data:/app/images
+
+  cut_ai_tool:
+    build:
+      context: ./backend/Tools
+      dockerfile: cut_ai/Dockerfile
+    container_name: picturas-cut-ai-tool-ms
+    networks:
+      - elk
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: on-failure
+    volumes:
+      - image_data:/app/images
+
+  people_ai_tool:
+    build: 
+      context: ./backend/Tools
+      dockerfile: people_ai/Dockerfile
+    container_name: picturas-people-ai-tool-ms
+    networks:
+      - elk
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: on-failure
+    volumes:
+      - image_data:/app/images
+
+  obj_ai_tool:
+    build: 
+      context: ./backend/Tools
+      dockerfile: obj_ai/Dockerfile
+    container_name: picturas-obj-ai-tool-ms
+    networks:
+      - elk
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: on-failure
+    volumes:
+      - image_data:/app/images
+
+  resize_tool:
+    build:
+      context: ./backend/Tools
+      dockerfile: resize/Dockerfile
+    container_name: picturas-resize-tool-ms
+    restart: on-failure
+    networks:
+      - elk
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - image_data:/app/images
+
+  rotate_tool:
+    build:
+      context: ./backend/Tools
+      dockerfile: rotate/Dockerfile
+    container_name: picturas-rotate-tool-ms
+    restart: on-failure
+    networks:
+      - elk
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - image_data:/app/images
+
+  saturation_tool:
+    build:
+      context: ./backend/Tools
+      dockerfile: saturation/Dockerfile
+    container_name: picturas-saturation-tool-ms
+    restart: on-failure
+    networks:
+      - elk
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - image_data:/app/images
+
+  text_ai_tool:
+    build:
+      context: ./backend/Tools
+      dockerfile: text_ai/Dockerfile
+    container_name: picturas-text-ai-tool-ms
+    networks:
+      - elk
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: on-failure
+    volumes:
+      - image_data:/app/images
+
+  upgrade_ai_tool:
+    build:
+      context: ./backend/Tools
+      dockerfile: upgrade_ai/Dockerfile
+    container_name: picturas-upgrade-ai-tool-ms
+    networks:
+      - elk
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: on-failure
+    volumes:
+      - image_data:/app/images
+
+  watermark_tool_ms:
+    image: prcsousa/picturas-watermark-tool-ms:latest
+    container_name: picturas-watermark-tool-ms
+    restart: always
+    environment:
+      - RABBITMQ_REQUESTS_QUEUE_NAME=watermark_queue
+      - RABBITMQ_USER=user
+      - RABBITMQ_PASS=password
+      - RABBITMQ_HOST=rabbitmq
+      - PICTURAS_LOG_LEVEL=INFO  # change / remove in production
+      - RABBITMQ_RESULTS_EXCHANGE=picturas
+      - RABBITMQ_RESULTS_ROUTING_KEY=project_queue
+    networks:
+      - elk
+    volumes:
+      - image_data:/images
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    networks:
+      - elk
+    ports:
+      - 3000:3000
+    volumes:
+      - ./backend/frontend:/app
+      - /app/node_modules
+
+  ws_gateway:
+    build: ./backend/wsGateway
+    restart: on-failure
+    networks:
+      - elk
+    ports:
+      - "4000:4000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=user
+      - RABBITMQ_PASS=password
+      - JWT_SECRET_KEY=lisan_al_gaib
+
+networks:
+  elk:
+    driver: bridge
+
+volumes:
+  rabbitmq_data:
+  project_data:
+  user_data:
+  image_data:
+  minio_data:
+  subscription_data:

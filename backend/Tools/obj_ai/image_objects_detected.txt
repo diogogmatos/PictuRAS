@@ -1,0 +1,5 @@
+bicycle: 2 
+bus: 2 
+person: 8 
+traffic light: 1 
+truck: 2 

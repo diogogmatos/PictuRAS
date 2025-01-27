@@ -1,0 +1,320 @@
+{
+    "users": [
+        {
+            "name": "user",
+            "password": "password",
+            "tags": "administrator"
+        },
+        {
+            "name": "guest",
+            "password": "guest",
+            "tags": "administrator"
+        }
+    ],
+    "vhosts": [
+        {
+            "name": "/"
+        }
+    ],
+    "permissions": [
+        {
+            "user": "user",
+            "vhost": "/",
+            "configure": ".*",
+            "write": ".*",
+            "read": ".*"
+        },
+        {
+            "user": "guest",
+            "vhost": "/",
+            "configure": ".*",
+            "write": ".*",
+            "read": ".*"
+        }
+    ],
+    "queues": [
+        {
+            "name": "project_queue",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false,
+            "arguments": {}
+        },
+        {
+            "name": "border_queue",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false,
+            "arguments": {}
+        },
+        {
+            "name": "brightness_queue",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false,
+            "arguments": {}
+        },
+        {
+            "name": "contrast_queue",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false,
+            "arguments": {}
+        },
+        {
+            "name": "cut_queue",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false,
+            "arguments": {}
+        },
+        {
+            "name": "scale_queue",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false,
+            "arguments": {}
+        },
+        {
+            "name": "saturation_queue",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false,
+            "arguments": {}
+        },
+        {
+            "name": "binarization_queue",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false,
+            "arguments": {}
+        },
+        {
+            "name": "rotate_queue",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false,
+            "arguments": {}
+        },
+        {
+            "name": "resize_queue",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false,
+            "arguments": {}
+        },
+        {
+            "name": "cut_ai_queue",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false,
+            "arguments": {}
+        },
+        {
+            "name": "upgrade_ai_queue",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false,
+            "arguments": {}
+        },
+        {
+            "name": "bg_remove_ai_queue",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false,
+            "arguments": {}
+        },
+        {
+            "name": "text_ai_queue",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false,
+            "arguments": {}
+        },
+        {
+            "name": "obj_ai_queue",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false,
+            "arguments": {}
+        },
+        {
+            "name": "people_ai_queue",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false,
+            "arguments": {}
+        },
+        {
+            "name": "watermark_queue",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false,
+            "arguments": {}
+        },
+        {
+            "name": "ws_queue",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false,
+            "arguments": {}
+        }
+    ],
+    "exchanges": [
+        {
+            "name": "picturas",
+            "vhost": "/",
+            "type": "direct",
+            "durable": true,
+            "auto_delete": false,
+            "internal": false,
+            "arguments": {}
+        }
+    ],
+    "bindings": [
+        {
+            "source": "picturas",
+            "vhost": "/",
+            "destination": "project_queue",
+            "destination_type": "queue",
+            "routing_key": "project_queue",
+            "arguments": {}
+        },
+        {
+            "source": "picturas",
+            "vhost": "/",
+            "destination": "border_queue",
+            "destination_type": "queue",
+            "routing_key": "border_queue",
+            "arguments": {}
+        },
+        {
+            "source": "picturas",
+            "vhost": "/",
+            "destination": "brightness_queue",
+            "destination_type": "queue",
+            "routing_key": "brightness_queue",
+            "arguments": {}
+        },
+        {
+            "source": "picturas",
+            "vhost": "/",
+            "destination": "contrast_queue",
+            "destination_type": "queue",
+            "routing_key": "contrast_queue",
+            "arguments": {}
+        },
+        {
+            "source": "picturas",
+            "vhost": "/",
+            "destination": "cut_queue",
+            "destination_type": "queue",
+            "routing_key": "cut_queue",
+            "arguments": {}
+        },
+        {
+            "source": "picturas",
+            "vhost": "/",
+            "destination": "scale_queue",
+            "destination_type": "queue",
+            "routing_key": "scale_queue",
+            "arguments": {}
+        },
+        {
+            "source": "picturas",
+            "vhost": "/",
+            "destination": "saturation_queue",
+            "destination_type": "queue",
+            "routing_key": "saturation_queue",
+            "arguments": {}
+        },
+        {
+            "source": "picturas",
+            "vhost": "/",
+            "destination": "binarization_queue",
+            "destination_type": "queue",
+            "routing_key": "binarization_queue",
+            "arguments": {}
+        },
+        {
+            "source": "picturas",
+            "vhost": "/",
+            "destination": "rotate_queue",
+            "destination_type": "queue",
+            "routing_key": "rotate_queue",
+            "arguments": {}
+        },
+        {
+            "source": "picturas",
+            "vhost": "/",
+            "destination": "resize_queue",
+            "destination_type": "queue",
+            "routing_key": "resize_queue",
+            "arguments": {}
+        },
+        {
+            "source": "picturas",
+            "vhost": "/",
+            "destination": "cut_ai_queue",
+            "destination_type": "queue",
+            "routing_key": "cut_ai_queue",
+            "arguments": {}
+        },
+        {
+            "source": "picturas",
+            "vhost": "/",
+            "destination": "upgrade_ai_queue",
+            "destination_type": "queue",
+            "routing_key": "upgrade_ai_queue",
+            "arguments": {}
+        },
+        {
+            "source": "picturas",
+            "vhost": "/",
+            "destination": "bg_remove_ai_queue",
+            "destination_type": "queue",
+            "routing_key": "bg_remove_ai_queue",
+            "arguments": {}
+        },
+        {
+            "source": "picturas",
+            "vhost": "/",
+            "destination": "text_ai_queue",
+            "destination_type": "queue",
+            "routing_key": "text_ai_queue",
+            "arguments": {}
+        },
+        {
+            "source": "picturas",
+            "vhost": "/",
+            "destination": "obj_ai_queue",
+            "destination_type": "queue",
+            "routing_key": "obj_ai_queue",
+            "arguments": {}
+        },
+        {
+            "source": "picturas",
+            "vhost": "/",
+            "destination": "people_ai_queue",
+            "destination_type": "queue",
+            "routing_key": "people_ai_queue",
+            "arguments": {}
+        },
+        {
+            "source": "picturas",
+            "vhost": "/",
+            "destination": "watermark_queue",
+            "destination_type": "queue",
+            "routing_key": "watermark_queue",
+            "arguments": {}
+        },
+        {
+            "source": "picturas",
+            "vhost": "/",
+            "destination": "ws_queue",
+            "destination_type": "queue",
+            "routing_key": "ws_queue",
+            "arguments": {}
+        }
+    ]
+}

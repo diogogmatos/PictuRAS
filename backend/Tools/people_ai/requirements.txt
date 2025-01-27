@@ -1,0 +1,4 @@
+opencv-python-headless==4.10.0.84
+pytz>=2024.2
+ultralytics>=8.0.0
+pika>=1.3.2
